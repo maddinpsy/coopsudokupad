@@ -1,0 +1,6 @@
+<h1>LiveView Message Page</h1>
+<div class="grid grid-cols-9 grid-rows-9 w-full aspect-square p-0.5 bg-black gap-0.5">
+  <%= for cell <- @cells do %>
+    <div class={"row-start-#{cell.row} col-start-#{cell.col} bg-white"} />
+  <% end %>
+</div>
