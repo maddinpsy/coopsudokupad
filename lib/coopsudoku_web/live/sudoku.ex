@@ -1,5 +1,7 @@
 defmodule CoopsudokuWeb.Sudoku do
   use CoopsudokuWeb, :live_view
+  use LiveSvelte.Components
+
   def id(r, c), do: 100 * r + c
 
   def mount(_params, _session, socket) do
@@ -13,9 +15,7 @@ defmodule CoopsudokuWeb.Sudoku do
     {:ok, assign(socket, cells: cells)}
   end
 
-  def handle_event("select", %{"row" => row, "col" => col}, socket) do
-    {r, _} = Integer.parse(row)
-    {c, _} = Integer.parse(col)
+  def handle_event("select", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
     new_cells = socket.assigns.cells |> update_in([id, :selected], &(not &1))
 
@@ -35,5 +35,11 @@ defmodule CoopsudokuWeb.Sudoku do
 
   defp topic do
     "chat"
+  end
+
+  def render(assigns) do
+    ~H"""
+    <.Sudoku cells={@cells |> Map.values()} socket={@socket} />
+    """
   end
 end
