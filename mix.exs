@@ -55,7 +55,8 @@ defmodule Coopsudoku.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:live_svelte, "~> 0.14.0"}
     ]
   end
 
@@ -67,12 +68,10 @@ defmodule Coopsudoku.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "assets.setup", "assets.build"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind coopsudoku", "esbuild coopsudoku"],
+      setup: ["deps.get", "cmd --cd assets npm install"],
       "assets.deploy": [
         "tailwind coopsudoku --minify",
-        "esbuild coopsudoku --minify",
+        "cmd --cd assets node build.js --deploy",
         "phx.digest"
       ]
     ]

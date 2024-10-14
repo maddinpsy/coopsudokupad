@@ -9,7 +9,8 @@ module.exports = {
   content: [
     "./js/**/*.js",
     "../lib/coopsudoku_web.ex",
-    "../lib/coopsudoku_web/**/*.*ex"
+    "../lib/coopsudoku_web/**/*.*ex",
+    "./svelte/**/*.svelte"
   ],
   theme: {
     extend: {
