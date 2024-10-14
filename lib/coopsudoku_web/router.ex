@@ -17,7 +17,9 @@ defmodule CoopsudokuWeb.Router do
   scope "/", CoopsudokuWeb do
     pipe_through :browser
 
-    live "/", Sudoku
+    # live "/", Sudoku
+    get "/", LoginController, :show
+    post "/", LoginController, :post
   end
 
   # Other scopes may use custom stacks.
