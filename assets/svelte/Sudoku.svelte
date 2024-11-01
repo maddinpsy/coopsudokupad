@@ -29,9 +29,11 @@
       live.pushEvent("deselect", cell, () => {});
     }
   }
-
   function keyPress(altKey, key) {
-    if (!altKey) {
+    if (
+      !altKey &&
+      !["1", "2", "3", "4", "5", "6", "7", "8", "9", "Delete"].includes(key)
+    ) {
       live.pushEvent("clear_selection", {}, () => {});
     }
     switch (key) {
@@ -54,8 +56,28 @@
         current_cell = { ...current_cell, col: current_cell.col - 1 };
         live.pushEvent("select", current_cell, () => {});
         break;
-      default:
-        console.log(key);
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+      case "7":
+      case "8":
+      case "9":
+        live.pushEvent(
+          "set_value",
+          { cell: current_cell, value: key },
+          () => {},
+        );
+        break;
+      case "Delete":
+        live.pushEvent(
+          "set_value",
+          { cell: current_cell, value: "" },
+          () => {},
+        );
+        break;
     }
   }
 </script>
@@ -76,12 +98,15 @@
     <div
       on:pointerdown={(e) => down(e.shiftKey || e.metaKey || e.ctrlKey, cell)}
       on:pointermove={(e) => move(cell)}
-      class="row-start-{cell.row} col-start-{cell.col} bg-white"
+      class="row-start-{cell.row} col-start-{cell.col} bg-white flex justify-center items-center"
+      style:font-size="7vw"
       style:box-shadow={cell.selected
-        .map((c, idx) => `inset 0 0 0 ${(idx + 1) * 0.2}em ${c}`)
+        .map((c, idx) => `inset 0 0 0 ${(idx + 1) * 0.1}em ${c}`)
         .join()}
       draggable="false"
-    ></div>
+    >
+      {cell.value ? cell.value : ""}
+    </div>
     <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
   {/each}
 </div>

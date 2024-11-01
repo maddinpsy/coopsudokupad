@@ -77,6 +77,19 @@ defmodule CoopsudokuWeb.Sudoku do
     {:noreply, assign(socket, cells: new_cells)}
   end
 
+  def handle_event("set_value", %{"cell" => %{"row" => r, "col" => c}, "value" => value}, socket) do
+    id = id(r, c)
+
+    new_cells =
+      socket.assigns.cells |> put_in([id, :value], value)
+
+    :ets.insert(:sudoku_data, {socket.assigns.room, new_cells})
+
+    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
+
+    {:noreply, assign(socket, cells: new_cells)}
+  end
+
   def handle_info(%{event: "sync_required"}, socket) do
     cells = sync_room(socket.assigns.room)
     {:noreply, assign(socket, cells: cells)}
