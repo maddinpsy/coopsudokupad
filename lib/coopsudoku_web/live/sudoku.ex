@@ -4,7 +4,7 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def id(r, c), do: 100 * r + c
 
-  def mount( %{"name" => _, "color" => _} = params, _session, socket) do
+  def mount( %{"name" => _, "color" => _, "room" => _} = params, _session, socket) do
     if connected?(socket) do
       CoopsudokuWeb.Endpoint.subscribe(topic())
     end
@@ -12,16 +12,43 @@ defmodule CoopsudokuWeb.Sudoku do
     cells =
       for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: false}}
 
-    {:ok, assign(socket, cells: cells, name: params["name"], color: params["color"])}
+    :ets.insert(:room_users,{params["room"], socket.id})
+
+    cells = sync_room(params["room"]) |> merge_cell_data(cells)
+
+    {:ok, assign(socket, cells: cells, name: params["name"], color: params["color"], room: params["room"])}
   end
 
   def mount(_params, _session, socket) do
     {:ok, socket}
   end
 
+  def sync_room(room)do
+    :ets.lookup(:room_users, room)
+    |> sync_users()
+  end
+
+  def sync_users([] = _user_list) do
+    %{}
+  end
+
+  def sync_users([{room, user_id} | other] = _user_list) do
+    case :ets.lookup(:sudoku_data,{room,user_id}) do
+      [{_key, data}] -> sync_users(other) |> merge_cell_data(data)
+      [] -> sync_users(other)
+    end
+  end
+
+  def merge_cell_data(accumulator, data) do
+    Map.merge(accumulator, data, fn _, a, b -> Map.update!(a, :selected, fn a -> b.selected or a end) end)
+  end
+
   def handle_event("select", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
     new_cells = socket.assigns.cells |> put_in([id, :selected], true)
+
+    key = {socket.assigns.room,socket.id}
+    :ets.insert(:sudoku_data,{key, new_cells})
 
     CoopsudokuWeb.Endpoint.broadcast(topic(), "message", %{
       id: id,
@@ -35,6 +62,9 @@ defmodule CoopsudokuWeb.Sudoku do
   def handle_event("deselect", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
     new_cells = socket.assigns.cells |> put_in([id, :selected], false)
+
+    key = {socket.assigns.room,socket.id}
+    :ets.insert(:sudoku_data,{key, new_cells})
 
     CoopsudokuWeb.Endpoint.broadcast(topic(), "message", %{
       id: id,
@@ -61,6 +91,9 @@ defmodule CoopsudokuWeb.Sudoku do
         fn {k, _}, acc -> put_in(acc, [k, :selected], false) end
       )
 
+      key = {socket.assigns.room,socket.id}
+      :ets.insert(:sudoku_data,{key, new_cells})
+
     {:noreply, assign(socket, cells: new_cells)}
   end
 
@@ -83,5 +116,10 @@ defmodule CoopsudokuWeb.Sudoku do
     ~H"""
     <.Login socket={@socket} />
     """
+  end
+
+  def terminate(_reason, socket) do
+    key = {socket.assigns.room,socket.id}
+    :ets.delete(:sudoku_data,key)
   end
 end

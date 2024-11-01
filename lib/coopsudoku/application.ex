@@ -20,6 +20,9 @@ defmodule Coopsudoku.Application do
       CoopsudokuWeb.Endpoint
     ]
 
+    :ets.new(:sudoku_data, [:set, :public, :named_table])
+    :ets.new(:room_users, [:bag, :public, :named_table])
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Coopsudoku.Supervisor]
