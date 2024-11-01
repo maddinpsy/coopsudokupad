@@ -4,6 +4,17 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def id(r, c), do: 100 * r + c
 
+  def mount( %{"name" => _, "color" => _} = params, _session, socket) do
+    if connected?(socket) do
+      CoopsudokuWeb.Endpoint.subscribe(topic())
+    end
+
+    cells =
+      for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: false}}
+
+    {:ok, assign(socket, cells: cells, name: params["name"], color: params["color"])}
+  end
+
   def mount(_params, _session, socket) do
     if connected?(socket) do
       CoopsudokuWeb.Endpoint.subscribe(topic())
@@ -56,9 +67,15 @@ defmodule CoopsudokuWeb.Sudoku do
     "chat"
   end
 
-  def render(assigns) do
+  def render(%{name: _} = assigns) do
     ~H"""
     <.Sudoku cells={@cells |> Map.values()} socket={@socket} />
+    """
+  end
+
+  def render(assigns) do
+    ~H"""
+    <.Login cells={@cells |> Map.values()} socket={@socket} />
     """
   end
 end

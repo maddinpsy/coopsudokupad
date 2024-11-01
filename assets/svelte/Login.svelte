@@ -1,23 +1,28 @@
-<% colors = [
-  "bg-yellow-500",
-  "bg-amber-500",
-  "bg-orange-500",
-  "bg-red-500",
-  "bg-rose-500",
-  "bg-pink-500",
-  "bg-purple-500",
-  "bg-indigo-500",
-  "bg-blue-500",
-  "bg-cyan-500",
-  "bg-teal-500",
-  "bg-emerald-500",
-  "bg-green-500",
-  "bg-lime-500"
-] %>
+<script>
+  export let cells;
+  export let live;
+
+  const colors = [
+    "bg-yellow-500",
+    "bg-amber-500",
+    "bg-orange-500",
+    "bg-red-500",
+    "bg-rose-500",
+    "bg-pink-500",
+    "bg-purple-500",
+    "bg-indigo-500",
+    "bg-blue-500",
+    "bg-cyan-500",
+    "bg-teal-500",
+    "bg-emerald-500",
+    "bg-green-500",
+    "bg-lime-500",
+  ];
+</script>
 
 <div class="bg-white shadow-md rounded-lg p-6 max-w-md w-full mx-auto">
   <h1 class="text-2xl font-bold mb-4">User Details Form</h1>
-  <.form for={} action={~p"/"}>
+  <form>
     <!-- Name Input -->
     <div class="mb-4">
       <label for="name" class="block text-gray-700">Name</label>
@@ -37,7 +42,7 @@
         class="mt-2 grid"
         style="grid-template-columns: repeat(auto-fit, minmax(10px, max-content));"
       >
-        <%= for {color,idx} <- colors |> Enum.with_index() do %>
+        {#each colors as color, idx}
           <label>
             <input
               type="radio"
@@ -46,10 +51,12 @@
               class="hidden peer"
               checked={idx === 0}
             />
-            <span class={"inline-block w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer #{color} peer-checked:ring-2 peer-checked:border-black"}>
+            <span
+              class="inline-block w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer {color} peer-checked:ring-2 peer-checked:border-black"
+            >
             </span>
           </label>
-        <% end %>
+        {/each}
       </div>
     </div>
     <!-- Room Name Input -->
@@ -70,5 +77,5 @@
     >
       Submit
     </button>
-  </.form>
+  </form>
 </div>
