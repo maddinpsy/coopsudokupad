@@ -16,14 +16,7 @@ defmodule CoopsudokuWeb.Sudoku do
   end
 
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      CoopsudokuWeb.Endpoint.subscribe(topic())
-    end
-
-    cells =
-      for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: false}}
-
-    {:ok, assign(socket, cells: cells)}
+    {:ok, socket}
   end
 
   def handle_event("select", %{"row" => r, "col" => c}, socket) do
@@ -88,7 +81,7 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def render(assigns) do
     ~H"""
-    <.Login cells={@cells |> Map.values()} socket={@socket} />
+    <.Login socket={@socket} />
     """
   end
 end
