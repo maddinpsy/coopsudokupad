@@ -24,18 +24,9 @@ defmodule CoopsudokuWeb.Sudoku do
   end
 
   def sync_room(room)do
-    :ets.lookup(:room_users, room)
-    |> sync_users()
-  end
-
-  def sync_users([] = _user_list) do
-    %{}
-  end
-
-  def sync_users([{_room,user_id} | other] = _user_list) do
-    case :ets.lookup(:sudoku_data,user_id) do
-      [{_key, data}] -> sync_users(other) |> merge_cell_data(data)
-      [] -> sync_users(other)
+    case :ets.lookup(:sudoku_data,room) do
+      [{_, data}] -> data
+      [] -> %{}
     end
   end
 
@@ -47,13 +38,9 @@ defmodule CoopsudokuWeb.Sudoku do
     id = id(r, c)
     new_cells = socket.assigns.cells |> put_in([id, :selected], true)
 
-    :ets.insert(:sudoku_data,{socket.id, new_cells})
+    :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
 
-    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "message", %{
-      id: id,
-      selected: new_cells[id].selected
-      # name: socket.assigns.username
-    })
+    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
 
     {:noreply, assign(socket, cells: new_cells)}
   end
@@ -62,13 +49,9 @@ defmodule CoopsudokuWeb.Sudoku do
     id = id(r, c)
     new_cells = socket.assigns.cells |> put_in([id, :selected], false)
 
-    :ets.insert(:sudoku_data,{socket.id, new_cells})
+    :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
 
-    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "message", %{
-      id: id,
-      selected: new_cells[id].selected
-      # name: socket.assigns.username
-    })
+    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
 
     {:noreply, assign(socket, cells: new_cells)}
   end
@@ -78,25 +61,21 @@ defmodule CoopsudokuWeb.Sudoku do
       socket.assigns.cells
       |> Map.to_list()
       |> Enum.filter(fn {_, v} -> v.selected end)
-      |> tap(&Enum.each(&1, fn {id, _} ->
-        CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "message", %{
-          id: id,
-          selected: false
-          # name: socket.assigns.username
-        })  end))
       |> Enum.reduce(
         socket.assigns.cells,
         fn {k, _}, acc -> put_in(acc, [k, :selected], false) end
       )
 
-      :ets.insert(:sudoku_data,{socket.id, new_cells})
+      :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
+
+      CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
 
     {:noreply, assign(socket, cells: new_cells)}
   end
 
-  def handle_info(%{event: "message", payload: %{id: id, selected: selected}}, socket) do
-    new_cells = socket.assigns.cells |> put_in([id, :selected], selected)
-    {:noreply, assign(socket, cells: new_cells)}
+  def handle_info(%{event: "sync_required"}, socket) do
+    cells = sync_room(socket.assigns.room)
+    {:noreply, assign(socket, cells: cells)}
   end
 
   defp topic(room) do
@@ -116,7 +95,9 @@ defmodule CoopsudokuWeb.Sudoku do
   end
 
   def terminate(_reason, socket) do
-    :ets.delete(:sudoku_data,socket.id)
     :ets.delete_object(:room_users,{socket.assigns.room, socket.id})
+    if(:ets.lookup(:room_users,socket.assigns.room) |> length == 0) do
+      :ets.delete(:sudoku_data,socket.assigns.room)
+    end
   end
 end
