@@ -76,7 +76,7 @@
       case "8":
       case "9":
         live.pushEvent(
-          "set_value",
+          "set_cornermark",
           { cell: current_cell, value: key },
           () => {},
         );
@@ -109,14 +109,30 @@
     <div
       on:pointerdown={(e) => down(e.shiftKey || e.metaKey || e.ctrlKey, cell)}
       on:pointermove={(e) => move(cell)}
-      class="row-start-{cell.row} col-start-{cell.col} bg-white flex justify-center items-center"
-      style:font-size="7vw"
+      class="row-start-{cell.row} col-start-{cell.col} bg-white relative"
       style:box-shadow={cell.selected
         .map((c, idx) => `inset 0 0 0 ${(idx + 1) * 0.1}em ${c}`)
         .join()}
+      style:font-size="5vw"
       draggable="false"
-      >
-        {cell.value ? cell.value : ""}
+    >
+      {#if cell.value}
+        <div
+          class="flex justify-center items-center h-full w-full select-none absolute"
+          style:font-size="7vw"
+        >
+          {cell.value}
+        </div>
+      {:else if cell.cornermark}
+        <div
+          class="grid h-full w-full grid-rows-3 grid-cols-3 select-none absolute"
+          style:font-size="2vw"
+        >
+          {#each cell.cornermark as mark}
+            <div class="flex justify-center items-center">{mark}</div>
+          {/each}
+        </div>
+      {/if}
     </div>
     <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
   {/each}

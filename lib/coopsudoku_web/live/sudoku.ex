@@ -90,6 +90,23 @@ defmodule CoopsudokuWeb.Sudoku do
     {:noreply, assign(socket, cells: new_cells)}
   end
 
+  def handle_event(
+        "set_cornermark",
+        %{"cell" => %{"row" => r, "col" => c}, "value" => value},
+        socket
+      ) do
+    id = id(r, c)
+
+    new_cells =
+      socket.assigns.cells |> update_in([id, :cornermark], &set_toggle(&1, value))
+
+    :ets.insert(:sudoku_data, {socket.assigns.room, new_cells})
+
+    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
+
+    {:noreply, assign(socket, cells: new_cells)}
+  end
+
   def handle_info(%{event: "sync_required"}, socket) do
     cells = sync_room(socket.assigns.room)
     {:noreply, assign(socket, cells: cells)}
@@ -105,6 +122,14 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def set_delete(list, value) do
     Enum.reject(list, fn elm -> elm == value end)
+  end
+
+  def set_toggle(nil, value) do
+    [value]
+  end
+
+  def set_toggle(list, value) do
+    if Enum.member?(list, value), do: set_delete(list, value), else: list ++ [value]
   end
 
   def render(%{name: _} = assigns) do
