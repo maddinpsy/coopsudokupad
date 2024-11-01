@@ -95,6 +95,7 @@ defmodule CoopsudokuWeb.Sudoku do
   end
 
   def terminate(_reason, socket) do
+    handle_event("clear_selection",[],socket)
     :ets.delete_object(:room_users,{socket.assigns.room, socket.id})
     if(:ets.lookup(:room_users,socket.assigns.room) |> length == 0) do
       :ets.delete(:sudoku_data,socket.assigns.room)
