@@ -5,6 +5,8 @@
 
   let select_mode = "nothing";
   let current_cell = { row: 0, col: 0 };
+  const input_modes = ["value", "cornermark"];
+  let input_mode = "value";
 
   function down(altKey, cell) {
     current_cell = cell;
@@ -75,20 +77,50 @@
       case "7":
       case "8":
       case "9":
-        live.pushEvent(
-          "set_cornermark",
-          { cell: current_cell, value: key },
-          () => {},
-        );
+        handle_set(key, input_mode);
         break;
       case "Backspace":
       case "Delete":
+        handle_delete();
+        break;
+      case " ":
+        input_mode =
+          input_modes[
+            (input_modes.indexOf(input_mode) + 1) % input_modes.length
+          ];
+        break;
+    }
+  }
+
+  function handle_set(key, mode) {
+    if (mode === "value") {
+      if (current_cell.value && current_cell.value === key) {
         live.pushEvent(
           "set_value",
           { cell: current_cell, value: "" },
           () => {},
         );
-        break;
+      } else {
+        live.pushEvent(
+          "set_value",
+          { cell: current_cell, value: key },
+          () => {},
+        );
+      }
+    } else if (mode === "cornermark") {
+      live.pushEvent(
+        "set_cornermark",
+        { cell: current_cell, value: key },
+        () => {},
+      );
+    }
+  }
+
+  function handle_delete() {
+    if (current_cell.value && current_cell.value !== "")
+      live.pushEvent("set_value", { cell: current_cell, value: "" }, () => {});
+    else if (current_cell.cornermark) {
+      live.pushEvent("clear_cornermark", current_cell, () => {});
     }
   }
 </script>
@@ -137,3 +169,4 @@
     <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
   {/each}
 </div>
+<div>Mode: {input_mode}</div>

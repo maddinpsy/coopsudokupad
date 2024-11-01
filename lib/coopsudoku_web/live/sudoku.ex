@@ -90,15 +90,24 @@ defmodule CoopsudokuWeb.Sudoku do
     {:noreply, assign(socket, cells: new_cells)}
   end
 
-  def handle_event(
-        "set_cornermark",
-        %{"cell" => %{"row" => r, "col" => c}, "value" => value},
-        socket
-      ) do
+  def handle_event("set_cornermark", %{"cell" => %{"row" => r, "col" => c}, "value" => v}, socket) do
     id = id(r, c)
 
     new_cells =
-      socket.assigns.cells |> update_in([id, :cornermark], &set_toggle(&1, value))
+      socket.assigns.cells |> update_in([id, :cornermark], &set_toggle(&1, v))
+
+    :ets.insert(:sudoku_data, {socket.assigns.room, new_cells})
+
+    CoopsudokuWeb.Endpoint.broadcast(topic(socket.assigns.room), "sync_required", %{})
+
+    {:noreply, assign(socket, cells: new_cells)}
+  end
+
+  def handle_event("clear_cornermark", %{"row" => r, "col" => c}, socket) do
+    id = id(r, c)
+
+    new_cells =
+      socket.assigns.cells |> put_in([id, :cornermark], [])
 
     :ets.insert(:sudoku_data, {socket.assigns.room, new_cells})
 
