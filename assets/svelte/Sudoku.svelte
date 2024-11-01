@@ -30,29 +30,39 @@
     }
   }
   function keyPress(altKey, key) {
-    if (
-      !altKey &&
-      !["1", "2", "3", "4", "5", "6", "7", "8", "9", "Delete"].includes(key)
-    ) {
-      live.pushEvent("clear_selection", {}, () => {});
-    }
     switch (key) {
       case "Escape":
         live.pushEvent("clear_selection", {}, () => {});
         break;
+      case "s":
       case "ArrowDown":
+        if (!altKey) {
+          live.pushEvent("clear_selection", {}, () => {});
+        }
         current_cell = { ...current_cell, row: current_cell.row + 1 };
         live.pushEvent("select", current_cell, () => {});
         break;
+      case "w":
       case "ArrowUp":
+        if (!altKey) {
+          live.pushEvent("clear_selection", {}, () => {});
+        }
         current_cell = { ...current_cell, row: current_cell.row - 1 };
         live.pushEvent("select", current_cell, () => {});
         break;
+      case "d":
       case "ArrowRight":
+        if (!altKey) {
+          live.pushEvent("clear_selection", {}, () => {});
+        }
         current_cell = { ...current_cell, col: current_cell.col + 1 };
         live.pushEvent("select", current_cell, () => {});
         break;
+      case "a":
       case "ArrowLeft":
+        if (!altKey) {
+          live.pushEvent("clear_selection", {}, () => {});
+        }
         current_cell = { ...current_cell, col: current_cell.col - 1 };
         live.pushEvent("select", current_cell, () => {});
         break;
@@ -71,6 +81,7 @@
           () => {},
         );
         break;
+      case "Backspace":
       case "Delete":
         live.pushEvent(
           "set_value",
@@ -104,8 +115,8 @@
         .map((c, idx) => `inset 0 0 0 ${(idx + 1) * 0.1}em ${c}`)
         .join()}
       draggable="false"
-    >
-      {cell.value ? cell.value : ""}
+      >
+        {cell.value ? cell.value : ""}
     </div>
     <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
   {/each}
