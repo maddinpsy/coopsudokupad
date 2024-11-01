@@ -1,5 +1,6 @@
 <script>
   export let cells;
+  export let color;
   export let live;
 
   let select_mode = "nothing";
@@ -8,7 +9,7 @@
     if (!altKey) {
       live.pushEvent("clear_selection", {}, () => {});
     }
-    if (!cell.selected) {
+    if (!cell.selected.includes(color)) {
       select_mode = "selecting";
       live.pushEvent("select", cell, () => {});
     } else {
@@ -18,10 +19,10 @@
   }
 
   function move(cell) {
-    if (select_mode == "selecting" && !cell.selected) {
+    if (select_mode == "selecting" && !cell.selected.includes(color)) {
       live.pushEvent("select", cell, () => {});
     }
-    if (select_mode == "deselecting" && cell.selected) {
+    if (select_mode == "deselecting" && cell.selected.includes(color)) {
       live.pushEvent("deselect", cell, () => {});
     }
   }
@@ -40,11 +41,10 @@
     <div
       on:pointerdown={(e) => down(e.shiftKey || e.metaKey || e.ctrlKey, cell)}
       on:pointermove={(e) => move(cell)}
-      class="row-start-{cell.row} col-start-{cell.col} bg-white border-lime-500 border-4"
-      style:border-style={cell.selected ? "solid" : "none"}
+      class="row-start-{cell.row} col-start-{cell.col} bg-white"
+      style:box-shadow={cell.selected.map((c,idx) => `inset 0 0 0 ${(idx+1)*0.2}em ${c}`).join()}
       draggable="false"
-    ></div>
+      ></div>
     <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
-    <!-- style="box-shadow: inset 0 0 0 0.3em red, inset 0 0 0 0.6em blue" -->
   {/each}
 </div>

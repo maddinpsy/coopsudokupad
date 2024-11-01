@@ -9,12 +9,9 @@ defmodule CoopsudokuWeb.Sudoku do
       CoopsudokuWeb.Endpoint.subscribe(topic(params["room"]))
     end
 
-    cells =
-      for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: false}}
-
     :ets.insert(:room_users,{params["room"], socket.id})
 
-    cells = sync_room(params["room"]) |> merge_cell_data(cells)
+    cells = sync_room(params["room"])
 
     {:ok, assign(socket, cells: cells, name: params["name"], color: params["color"], room: params["room"])}
   end
@@ -26,17 +23,13 @@ defmodule CoopsudokuWeb.Sudoku do
   def sync_room(room)do
     case :ets.lookup(:sudoku_data,room) do
       [{_, data}] -> data
-      [] -> %{}
+      [] -> for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: []}}
     end
-  end
-
-  def merge_cell_data(accumulator, data) do
-    Map.merge(accumulator, data, fn _, a, b -> Map.update!(a, :selected, fn a -> b.selected or a end) end)
   end
 
   def handle_event("select", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
-    new_cells = socket.assigns.cells |> put_in([id, :selected], true)
+    new_cells = socket.assigns.cells |> update_in([id, :selected], &set_add(&1,socket.assigns.color))
 
     :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
 
@@ -47,7 +40,7 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def handle_event("deselect", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
-    new_cells = socket.assigns.cells |> put_in([id, :selected], false)
+    new_cells = socket.assigns.cells |> update_in([id, :selected], &set_delete(&1,socket.assigns.color))
 
     :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
 
@@ -60,10 +53,9 @@ defmodule CoopsudokuWeb.Sudoku do
     new_cells =
       socket.assigns.cells
       |> Map.to_list()
-      |> Enum.filter(fn {_, v} -> v.selected end)
       |> Enum.reduce(
         socket.assigns.cells,
-        fn {k, _}, acc -> put_in(acc, [k, :selected], false) end
+        fn {cell_id, _}, acc -> update_in(acc, [cell_id, :selected], &set_delete(&1,socket.assigns.color)) end
       )
 
       :ets.insert(:sudoku_data,{socket.assigns.room, new_cells})
@@ -82,9 +74,17 @@ defmodule CoopsudokuWeb.Sudoku do
     "chat"<>room
   end
 
+  def set_add(list, value) do
+    if Enum.member?(list,value), do: list, else: [value | list]
+  end
+
+  def set_delete(list, value) do
+    Enum.reject(list,fn elm -> elm==value end)
+  end
+
   def render(%{name: _} = assigns) do
     ~H"""
-    <.Sudoku cells={@cells |> Map.values()} socket={@socket} />
+    <.Sudoku cells={@cells |> Map.values()} socket={@socket} color={@color} />
     """
   end
 
