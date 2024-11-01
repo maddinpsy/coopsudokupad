@@ -4,12 +4,17 @@
   export let live;
 
   let select_mode = "nothing";
-  let current_cell = { row: 0, col: 0 };
+  let current_cell_idx = 0;
+  const col_count = 100;
   const input_modes = ["value", "cornermark"];
   let input_mode = "value";
 
+  function get_cell_id(cell) {
+    return cell.row * col_count + cell.col;
+  }
+
   function down(altKey, cell) {
-    current_cell = cell;
+    current_cell_idx = get_cell_id(cell);
     if (!altKey) {
       live.pushEvent("clear_selection", {}, () => {});
     }
@@ -23,7 +28,7 @@
   }
 
   function move(cell) {
-    current_cell = cell;
+    current_cell_idx = get_cell_id(cell);
     if (select_mode == "selecting" && !cell.selected.includes(color)) {
       live.pushEvent("select", cell, () => {});
     }
@@ -38,35 +43,19 @@
         break;
       case "s":
       case "ArrowDown":
-        if (!altKey) {
-          live.pushEvent("clear_selection", {}, () => {});
-        }
-        current_cell = { ...current_cell, row: current_cell.row + 1 };
-        live.pushEvent("select", current_cell, () => {});
+        handle_move(altKey, current_cell_idx + col_count);
         break;
       case "w":
       case "ArrowUp":
-        if (!altKey) {
-          live.pushEvent("clear_selection", {}, () => {});
-        }
-        current_cell = { ...current_cell, row: current_cell.row - 1 };
-        live.pushEvent("select", current_cell, () => {});
+        handle_move(altKey, current_cell_idx - col_count);
         break;
       case "d":
       case "ArrowRight":
-        if (!altKey) {
-          live.pushEvent("clear_selection", {}, () => {});
-        }
-        current_cell = { ...current_cell, col: current_cell.col + 1 };
-        live.pushEvent("select", current_cell, () => {});
+        handle_move(altKey, current_cell_idx + 1);
         break;
       case "a":
       case "ArrowLeft":
-        if (!altKey) {
-          live.pushEvent("clear_selection", {}, () => {});
-        }
-        current_cell = { ...current_cell, col: current_cell.col - 1 };
-        live.pushEvent("select", current_cell, () => {});
+        handle_move(altKey, current_cell_idx - 1);
         break;
       case "1":
       case "2":
@@ -94,33 +83,50 @@
 
   function handle_set(key, mode) {
     if (mode === "value") {
-      if (current_cell.value && current_cell.value === key) {
+      if (
+        cells[current_cell_idx].value &&
+        cells[current_cell_idx].value === key
+      ) {
         live.pushEvent(
           "set_value",
-          { cell: current_cell, value: "" },
+          { cell: cells[current_cell_idx], value: "" },
           () => {},
         );
       } else {
         live.pushEvent(
           "set_value",
-          { cell: current_cell, value: key },
+          { cell: cells[current_cell_idx], value: key },
           () => {},
         );
       }
     } else if (mode === "cornermark") {
       live.pushEvent(
         "set_cornermark",
-        { cell: current_cell, value: key },
+        { cell: cells[current_cell_idx], value: key },
         () => {},
       );
     }
   }
 
   function handle_delete() {
-    if (current_cell.value && current_cell.value !== "")
-      live.pushEvent("set_value", { cell: current_cell, value: "" }, () => {});
-    else if (current_cell.cornermark) {
-      live.pushEvent("clear_cornermark", current_cell, () => {});
+    if (cells[current_cell_idx].value && cells[current_cell_idx].value !== "")
+      live.pushEvent(
+        "set_value",
+        { cell: cells[current_cell_idx], value: "" },
+        () => {},
+      );
+    else if (cells[current_cell_idx].cornermark) {
+      live.pushEvent("clear_cornermark", cells[current_cell_idx], () => {});
+    }
+  }
+
+  function handle_move(altKey, new_cell_idx) {
+    if (cells[new_cell_idx]) {
+      if (!altKey) {
+        live.pushEvent("clear_selection", {}, () => {});
+      }
+      live.pushEvent("select", cells[new_cell_idx], () => {});
+      current_cell_idx = new_cell_idx;
     }
   }
 </script>
@@ -135,7 +141,7 @@
   on:keydown={(e) => keyPress(e.shiftKey || e.metaKey || e.ctrlKey, e.key)}
   on:pointerup={() => (select_mode = "nothing")}
 >
-  {#each cells as cell}
+  {#each Object.values(cells) as cell}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- on:click={() => select(cell.row, cell.col)} -->
     <div
