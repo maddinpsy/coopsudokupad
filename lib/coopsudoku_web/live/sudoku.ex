@@ -42,6 +42,13 @@ defmodule CoopsudokuWeb.Sudoku do
   def handle_event("deselect", %{"row" => r, "col" => c}, socket) do
     id = id(r, c)
     new_cells = socket.assigns.cells |> put_in([id, :selected], false)
+
+    CoopsudokuWeb.Endpoint.broadcast(topic(), "message", %{
+      id: id,
+      selected: new_cells[id].selected
+      # name: socket.assigns.username
+    })
+
     {:noreply, assign(socket, cells: new_cells)}
   end
 
@@ -50,6 +57,12 @@ defmodule CoopsudokuWeb.Sudoku do
       socket.assigns.cells
       |> Map.to_list()
       |> Enum.filter(fn {_, v} -> v.selected end)
+      |> tap(&Enum.each(&1, fn {id, _} ->
+        CoopsudokuWeb.Endpoint.broadcast(topic(), "message", %{
+          id: id,
+          selected: false
+          # name: socket.assigns.username
+        })  end))
       |> Enum.reduce(
         socket.assigns.cells,
         fn {k, _}, acc -> put_in(acc, [k, :selected], false) end
