@@ -2,4 +2,5 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "./sudokupad.style.css";
 /* This file is for your main application CSS */

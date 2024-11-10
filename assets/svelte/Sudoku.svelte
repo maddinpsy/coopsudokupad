@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from "svelte";
+
   export let cells;
   export let color;
   export let live;
@@ -129,8 +131,35 @@
       current_cell_idx = new_cell_idx;
     }
   }
+  import { load } from "../js/sudokupad.js";
+  onMount(() => {
+    load();
+  });
 </script>
 
+<svg
+  id="svgrenderer"
+  class="boardsvg"
+  xmlns="http://www.w3.org/2000/svg"
+  version="1.1"
+  draggable="false"
+  style="vector-effect: non-scaling-stroke;"
+>
+  <g id="background" />
+  <g id="underlay" />
+  <g id="cell-colors" />
+  <g id="arrows" />
+  <g id="cages" />
+  <g id="cell-highlights" />
+  <g id="cell-grids" />
+  <g id="cell-errors" />
+  <g id="overlay" />
+  <g id="cell-givens" />
+  <g id="cell-pen" />
+  <g id="cell-pencilmarks" />
+  <g id="cell-candidates" />
+  <g id="cell-values" />
+</svg>
 <h1>LiveView Message Page</h1>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
