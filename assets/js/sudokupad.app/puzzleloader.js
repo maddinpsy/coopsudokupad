@@ -1,4 +1,5 @@
 import { loadFPuzzle } from './fpuzzlesdecoder.js'
+import { PuzzleZipper } from './puzzlezipper.js'
 
 const PuzzleLoader = (() => {
 	// Cache
