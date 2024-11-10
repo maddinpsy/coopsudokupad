@@ -16,8 +16,13 @@ defmodule CoopsudokuWeb.Router do
 
   scope "/", CoopsudokuWeb do
     pipe_through :browser
-
     live "/", Sudoku
+  end
+
+  scope "/api", CoopsudokuWeb do
+    pipe_through :api
+
+    get "/puzzle/:id", PuzzleController, :show
   end
 
   # Other scopes may use custom stacks.

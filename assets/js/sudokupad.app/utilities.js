@@ -656,4 +656,4 @@ let createJSONEditor = async (opts = {}) => {
 	return editor;
 };
 
-export { md5Digest, toRC, stepPoints, isSameRC, roundCenter, getCellsAlongPoints, throttleFunc, cssColorHasAlpha, calcDistance, triangularNumber }
+export { md5Digest, toRC, stepPoints, isSameRC, roundCenter, getCellsAlongPoints, throttleFunc, cssColorHasAlpha, calcDistance, triangularNumber, fetchWithTimeout }

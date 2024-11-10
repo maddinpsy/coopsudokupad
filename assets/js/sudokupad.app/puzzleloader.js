@@ -1,5 +1,7 @@
 import { loadFPuzzle } from './fpuzzlesdecoder.js'
 import { PuzzleZipper } from './puzzlezipper.js'
+import { fetchWithTimeout } from './utilities.js'
+
 
 const PuzzleLoader = (() => {
 	// Cache
