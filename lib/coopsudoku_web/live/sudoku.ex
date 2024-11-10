@@ -143,7 +143,7 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def render(%{name: _} = assigns) do
     ~H"""
-    <.Sudoku cells={@cells} socket={@socket} color={@color} />
+    <.Sudoku cells={@cells} socket={@socket} color={@color} ssr={false} />
     """
   end
 
