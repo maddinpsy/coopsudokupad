@@ -151,6 +151,7 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <svg
   on:pointerup={() => (select_mode = "nothing")}
   on:pointerdown={(e) =>
@@ -160,6 +161,8 @@
       move(getRC(e.clientX, e.clientY));
     }
   }}
+  on:keydown={(e) => keyPress(e.shiftKey || e.metaKey || e.ctrlKey, e.key)}
+  tabindex="0"
   id="svgrenderer"
   class="boardsvg"
   xmlns="http://www.w3.org/2000/svg"
