@@ -61,15 +61,19 @@ export async function load() {
     svgRenderer.adjustViewBox(-64, -64, 656, 656)
 }
 
-export function select(cells) {
+export function select(cells, color) {
+    const svgRenderer = new SvgRenderer()
+    svgRenderer.renderCage({
+        target: 'cell-highlights', style: 'selectioncage', borderColor: color,
+        cells: cells
+    });
+}
+
+export function clearSelection() {
     const svgRenderer = new SvgRenderer()
     svgRenderer.svgElem
         .querySelectorAll('#cell-highlights .cage-selectioncage')
         .forEach(elem => elem.remove());
-    svgRenderer.renderCage({
-        target: 'cell-highlights', style: 'selectioncage',
-        cells: cells
-    });
 }
 
 export function getRC(x, y) {
@@ -79,4 +83,41 @@ export function getRC(x, y) {
         row: Math.floor((y - tlRect.y) / tlRect.height * 9),
         col: Math.floor((x - tlRect.x) / tlRect.width * 9)
     };
+}
+
+export function mixColors(hexColors) {
+    if (!hexColors || !hexColors.length) return "#000000"; // Default to black if no colors provided
+
+    // Convert hex to RGB
+    const rgbColors = hexColors.map(hex => {
+        const bigint = parseInt(hex.slice(1), 16);
+        return {
+            r: (bigint >> 16) & 255,
+            g: (bigint >> 8) & 255,
+            b: bigint & 255,
+        };
+    });
+
+    // Average RGB components
+    const avgColor = rgbColors.reduce(
+        (acc, color) => ({
+            r: acc.r + color.r,
+            g: acc.g + color.g,
+            b: acc.b + color.b,
+        }),
+        { r: 0, g: 0, b: 0 }
+    );
+
+    const total = hexColors.length;
+    const mixed = {
+        r: Math.round(avgColor.r / total),
+        g: Math.round(avgColor.g / total),
+        b: Math.round(avgColor.b / total),
+    };
+
+    // Convert RGB back to hex
+    return '#' + (((1 << 24) | (mixed.r << 16) | (mixed.g << 8) | mixed.b)
+        .toString(16)
+        .slice(1)
+        .toUpperCase());
 }

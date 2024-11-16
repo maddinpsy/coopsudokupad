@@ -1,6 +1,12 @@
 <script>
   import { onMount } from "svelte";
-  import { load, select, getRC } from "../js/sudokupad.js";
+  import {
+    load,
+    select,
+    clearSelection,
+    getRC,
+    mixColors,
+  } from "../js/sudokupad.js";
 
   export let cells;
   export let color;
@@ -144,8 +150,15 @@
 
   $: {
     if (loaded) {
-      selectedCells = Object.values(cells).filter((c) => c.selected.length > 0);
-      select(selectedCells);
+      clearSelection();
+      selectedCells = Object.values(cells)
+        .filter((c) => c.selected.length > 0)
+        .reduce((map, { selected, ...cell }) => {
+          const avgColor = mixColors(selected);
+          map.set(avgColor, [...(map.get(avgColor) || []), cell]);
+          return map;
+        }, new Map())
+        .forEach((cellGroup, avgColor) => select(cellGroup, avgColor));
     }
   }
 </script>
