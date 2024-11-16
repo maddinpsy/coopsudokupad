@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { load, select, getRC } from "../js/sudokupad.js";
 
   export let cells;
   export let color;
@@ -17,10 +18,12 @@
 
   function down(altKey, cell) {
     current_cell_idx = get_cell_id(cell);
+    if (cells[current_cell_idx] === undefined) return;
+    const selected = cells[current_cell_idx].selected;
     if (!altKey) {
       live.pushEvent("clear_selection", {}, () => {});
     }
-    if (!cell.selected.includes(color)) {
+    if (!selected.includes(color)) {
       select_mode = "selecting";
       live.pushEvent("select", cell, () => {});
     } else {
@@ -31,10 +34,12 @@
 
   function move(cell) {
     current_cell_idx = get_cell_id(cell);
-    if (select_mode == "selecting" && !cell.selected.includes(color)) {
+    if (cells[current_cell_idx] === undefined) return;
+    const selected = cells[current_cell_idx].selected;
+    if (select_mode == "selecting" && !selected.includes(color)) {
       live.pushEvent("select", cell, () => {});
     }
-    if (select_mode == "deselecting" && cell.selected.includes(color)) {
+    if (select_mode == "deselecting" && selected.includes(color)) {
       live.pushEvent("deselect", cell, () => {});
     }
   }
@@ -131,13 +136,30 @@
       current_cell_idx = new_cell_idx;
     }
   }
-  import { load } from "../js/sudokupad.js";
+  let loaded = false;
   onMount(() => {
     load();
+    loaded = true;
   });
+
+  $: {
+    if (loaded) {
+      selectedCells = Object.values(cells).filter((c) => c.selected.length > 0);
+      select(selectedCells);
+    }
+  }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <svg
+  on:pointerup={() => (select_mode = "nothing")}
+  on:pointerdown={(e) =>
+    down(e.shiftKey || e.metaKey || e.ctrlKey, getRC(e.clientX, e.clientY))}
+  on:pointermove={(e) => {
+    if (select_mode !== "nothing") {
+      move(getRC(e.clientX, e.clientY));
+    }
+  }}
   id="svgrenderer"
   class="boardsvg"
   xmlns="http://www.w3.org/2000/svg"
@@ -160,48 +182,4 @@
   <g id="cell-candidates" />
   <g id="cell-values" />
 </svg>
-<h1>LiveView Message Page</h1>
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div
-  class="grid grid-cols-9 grid-rows-9 max-w-full aspect-square p-0.5 bg-black gap-0.5 outline-none"
-  draggable="false"
-  tabindex="0"
-  on:keydown={(e) => keyPress(e.shiftKey || e.metaKey || e.ctrlKey, e.key)}
-  on:pointerup={() => (select_mode = "nothing")}
->
-  {#each Object.values(cells) as cell}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- on:click={() => select(cell.row, cell.col)} -->
-    <div
-      on:pointerdown={(e) => down(e.shiftKey || e.metaKey || e.ctrlKey, cell)}
-      on:pointermove={(e) => move(cell)}
-      class="row-start-{cell.row} col-start-{cell.col} bg-white relative"
-      style:box-shadow={cell.selected
-        .map((c, idx) => `inset 0 0 0 ${(idx + 1) * 0.1}em ${c}`)
-        .join()}
-      style:font-size="5vw"
-      draggable="false"
-    >
-      {#if cell.value}
-        <div
-          class="flex justify-center items-center h-full w-full select-none absolute"
-          style:font-size="7vw"
-        >
-          {cell.value}
-        </div>
-      {:else if cell.cornermark}
-        <div
-          class="grid h-full w-full grid-rows-3 grid-cols-3 select-none absolute"
-          style:font-size="2vw"
-        >
-          {#each cell.cornermark as mark}
-            <div class="flex justify-center items-center">{mark}</div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-    <!-- style="border-style: solid; border-width: 0.4em; border-image: conic-gradient(from 30deg, red 0% 50%, blue 50% 100%) 1" -->
-  {/each}
-</div>
 <div>Mode: {input_mode}</div>

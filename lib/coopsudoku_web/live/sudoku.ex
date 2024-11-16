@@ -29,7 +29,7 @@ defmodule CoopsudokuWeb.Sudoku do
   def sync_room(room) do
     case :ets.lookup(:sudoku_data, room) do
       [{_, data}] -> data
-      [] -> for c <- 1..9, r <- 1..9, into: %{}, do: {id(r, c), %{row: r, col: c, selected: []}}
+      [] -> for c <- 0..8, r <- 0..8, into: %{}, do: {id(r, c), %{row: r, col: c, selected: []}}
     end
   end
 
@@ -149,7 +149,7 @@ defmodule CoopsudokuWeb.Sudoku do
 
   def render(assigns) do
     ~H"""
-    <.Login socket={@socket} />
+    <.Login socket={@socket} ssr={false} />
     """
   end
 
