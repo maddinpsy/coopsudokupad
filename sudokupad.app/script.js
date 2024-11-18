@@ -49,6 +49,8 @@ Contributors:
 		1. Improved red/orange/yellow colour contrast (v0.163.28)
 	Chameleon
 		1. Added feature-gridrules (v0.547.0)
+	giusb3.0
+		1. Added feature-copycells (v0.556.0)
 
 TODO:
 	- Refactor unpause/wait as a matching pair
@@ -71,7 +73,7 @@ const colorScheme = {
 	cell_candidates: '#1d6ae5',
 	cell_pencilmarks: '#1d6ae5',
 
-	import_100000: '#0000', // color 0
+	import_00000000: '#0000', // color 0
 	import_000000: '#000000', // color 1
 	import_cfcfcf: '#cfcfcf', // color 2
 	import_ffffff: '#ffffff', // color 3
@@ -1616,7 +1618,7 @@ const Timer = (() => {
 	P.runOpensetting = function () {
 		// TODO: This should really not be here
 		const opensetting = new URLSearchParams(document.location.search).get('opensetting'),
-			settingHandler = Framework.settingsOpts.find(s => opensetting === s.name).handler;
+			settingHandler = Framework.settingsOpts.find(s => opensetting === s.name)?.handler;
 		if ('function' === typeof settingHandler) {
 			settingHandler();
 			this.firstStart = false;
@@ -2377,6 +2379,7 @@ const Puzzle = (() => {
 	P.getRules = function (asHTML, puzzle = this.currentPuzzle) {
 		let rulesText = (puzzle || {}).rules || Puzzle.DefaultRules;
 		if (Array.isArray(rulesText)) rulesText = rulesText.join('\n');
+		rulesText = rulesText.replace(/(\n)+$/, ''); // Trim trailing blank lines
 		if (asHTML) rulesText = textToHtml(rulesText);
 		if (puzzle === this.currentPuzzle && !this.hasSolution(puzzle)) {
 			rulesText += `\n<div class="puzzlenotes">Note: This puzzle does not have <strong>solution checking</strong>.</div>`
@@ -3404,7 +3407,7 @@ const App = (() => {
 		Framework.upgradeLegacyData(['tool']);
 	}
 	var P = Object.assign(App.prototype, { constructor: App });
-	App.VERSION = '0.555.0';
+	App.VERSION = '0.560.0';
 	App.colorHexToRGB = (hex) => {
 		hex = parseInt(hex.replace(/^#/, ''), 16);
 		return { r: hex >> 16 & 255, g: hex >> 8 & 255, b: hex >> 0 & 255 };
@@ -3709,11 +3712,11 @@ const App = (() => {
 	P.convertPuzzle = function (puzzle) {
 		//console.info('App.convertPuzzle(puzzle);', puzzle);
 		const { normalizeRules, hasAntiKnight, hasAntiKing, hasKillerCage, hasXV } = RulesParser;
-		// this.sourcePuzzle = JSON.parse(JSON.stringify(puzzle));
-		// if (puzzle.id !== undefined && this.puzzle.puzzleId === undefined) {
-		// this.puzzle.puzzleId = puzzle.id;
-		// }
-		const svgRenderer = new SvgRenderer();
+		this.sourcePuzzle = JSON.parse(JSON.stringify(puzzle));
+		if (puzzle.id !== undefined && this.puzzle.puzzleId === undefined) {
+			this.puzzle.puzzleId = puzzle.id;
+		}
+		const svgRenderer = this.svgRenderer;
 		const { givens, cages } = convertedPuzzle = {
 			id: puzzle.id,
 			givens: [],
@@ -3733,251 +3736,252 @@ const App = (() => {
 			}
 			return attr;
 		};
-		// try {
-		// this.showYoutubeButton(puzzle);
-		// this.puzzle.createPuzzle({ rows, cols });
-		// this.initMetadata(puzzle, convertedPuzzle);
-		// if (isExperimentalMode()) {
-		// 	if (this.puzzle.puzzleId === 'jh6RDHdBmq') {
-		// 		// Test/demo
-		// 		svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/jh6RDHdBmq.png', width: 580, height: 580, opacity: 0.2, x: '-2', y: '-2', preserveAspectRatio: 'none' } });
-		// 	}
-		// 	if (this.puzzle.puzzleId === 'R9h8LBHngd') {
-		// 		// Test/demo
-		// 		svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/R9h8LBHngd.png', width: 626, height: 623, opacity: 0.2, x: '-25', y: '-18', preserveAspectRatio: 'none' } });
-		// 	}
-		// 	if (this.puzzle.puzzleId === 'TmMBJj8jbr') {
-		// 		// Test/demo
-		// 		svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/TmMBJj8jbr.png', width: 600, height: 601, opacity: 1, x: '-15', y: '-13', preserveAspectRatio: 'none' } });
-		// 	}
-		// 	if (this.puzzle.puzzleId === 'R68bTRmnrP') {
-		// 		// Test/demo
-		// 		svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/R68bTRmnrP.png', width: 550, height: 550, opacity: 0.2, x: '20', y: '-50', preserveAspectRatio: 'none' } });
-		// 	}
-		// 	if (this.puzzle.puzzleId === 'p27QN9Ldtj') {
-		// 		// Test/demo
-		// 		svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/p27QN9Ldtj.jpg', width: 960 * 0.7, height: 1025 * 0.7, opacity: 0.3, x: '-48', y: '-18', preserveAspectRatio: 'none' } });
-		// 	}
-		// }
-		// if (this.puzzle.puzzleId === 'NJbPwMVNwZ') {
-		// 	svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/NJbPwMVNwZ.png', width: 1024 * 0.566, height: 1024 * 0.566, opacity: 0.4, x: '-2', y: '-2', preserveAspectRatio: 'none' } });
-		// }
-		// if (this.puzzle.puzzleId === 'MONOPOLYSUDOKU') {
-		// 	svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/monopolysudoku.png', width: 1024 * 0.66, height: 1024 * 0.66, opacity: 0.4, x: '-50', y: '-50', preserveAspectRatio: 'none' } });
-		// }
-
-		// Extract puzzle features
-		Object.keys(PuzzleFeatures).forEach(feature => convertedPuzzle[feature] = PuzzleFeatures[feature](puzzle) || []);
-
-		const handleArrowFeature = part => {
-			if (part.feature) {
-				switch (part.feature.type) {
-					case 'arrowsum':
-						applyLegacyOpacity((part.feature.part || {}).bulb);
-						svgRenderer.renderArrowSum(part.feature.part);
-						break;
-					case 'littlekiller': svgRenderer.renderLittleKiller(part.feature); break;
-					default: console.error('Unhandled feature in convertPuzzle > puzzle.arrows:', part.feature);
+		try {
+			this.showYoutubeButton(puzzle);
+			const rows = (puzzle.cells || []).length, cols = Math.max.apply(Math, (puzzle.cells || []).map(row => row.length));
+			this.puzzle.createPuzzle({ rows, cols });
+			this.initMetadata(puzzle, convertedPuzzle);
+			if (isExperimentalMode()) {
+				if (this.puzzle.puzzleId === 'jh6RDHdBmq') {
+					// Test/demo
+					svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/jh6RDHdBmq.png', width: 580, height: 580, opacity: 0.2, x: '-2', y: '-2', preserveAspectRatio: 'none' } });
 				}
-				return;
-			}
-			//console.info('Unhandled feature in arrows:', part);
-			svgRenderer.renderArrow(Object.assign({ target: 'arrows' }, part));
-		};
-		const handleLineFeature = part => {
-			// TODO: Revisit this hack when implementing the "lunchbox" feature (see: 3RJ9dFJpM9)
-			if (part.thickness === 1) part.thickness = 2;
-			if (part.feature) {
-				switch (part.feature.type) {
-					//case 'thermo': part.svgElem = svgRenderer.renderThermo(part.feature); break;
-					case 'inequality': svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part)); break;
-					case 'sandwichcage': svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part.feature.line)); break;
-					case 'palindrome': svgRenderer.renderPalindrome(part.feature); break;
-					case 'sudokux': case 'sudokux+': case 'sudokux-': svgRenderer.renderSudokuX(part.feature); break;
-					default: console.error('Unhandled feature in convertPuzzle > puzzle.lines:', part.feature);
+				if (this.puzzle.puzzleId === 'R9h8LBHngd') {
+					// Test/demo
+					svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/R9h8LBHngd.png', width: 626, height: 623, opacity: 0.2, x: '-25', y: '-18', preserveAspectRatio: 'none' } });
 				}
-				return;
-			}
-			//console.info('Unhandled feature in lines:', part);
-			svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part));
-		};
-		const handleOverlayFeature = part => {
-			if (part.feature) {
-				switch (part.feature.type) {
-					case 'kropki': return svgRenderer.renderKropki(part.feature.part); break;
-					case 'xv': return svgRenderer.renderXV(part.feature.part); break;
-					//case 'thermo': return;
-					case 'littlekiller': return;
-					case 'arrowsum':
-						// If skipping this causes issues, just remove the "return;" in the next line
-						return;
-						break;
-					case 'inequality': console.warn('implement text-to-line conversions for inequality feature.'); break;
-					case 'windoku': break;
-					default: console.error('Unhandled feature in convertPuzzle > puzzle.under/overlays:', part.feature);
+				if (this.puzzle.puzzleId === 'TmMBJj8jbr') {
+					// Test/demo
+					svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/TmMBJj8jbr.png', width: 600, height: 601, opacity: 1, x: '-15', y: '-13', preserveAspectRatio: 'none' } });
+				}
+				if (this.puzzle.puzzleId === 'R68bTRmnrP') {
+					// Test/demo
+					svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/R68bTRmnrP.png', width: 550, height: 550, opacity: 0.2, x: '20', y: '-50', preserveAspectRatio: 'none' } });
+				}
+				if (this.puzzle.puzzleId === 'p27QN9Ldtj') {
+					// Test/demo
+					svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/p27QN9Ldtj.jpg', width: 960 * 0.7, height: 1025 * 0.7, opacity: 0.3, x: '-48', y: '-18', preserveAspectRatio: 'none' } });
 				}
 			}
-			//console.info('Unhandled feature in overlay/underlay:', part);
-			var target = (puzzle.underlays || []).indexOf(part) !== -1 ? 'underlay' : 'overlay';
-			var attr = Object.assign({ target }, part);
-			attr.borderColor = attr.borderColor || 'none';
-			attr.backgroundColor = attr.backgroundColor || 'none';
-			if (attr.backgroundColor === attr.borderColor) delete attr.borderColor;
-			applyLegacyOpacity(attr);
-			//if((backgroundColor || '').toLowerCase() === '#cfcfcf' && (opacity === 1)) backgroundColor = 'rgba(0,0,0,0.2)';
-			//if(borderColor !== 'none') borderColor = App.colorHexToRGBA(borderColor, 0.5);
-			//if(backgroundColor !== 'none') backgroundColor = App.colorHexToRGBA(backgroundColor, 0.5);
-			//console.log('rect colours:', part, backgroundColor, borderColor, opacity);
-			//svgRenderer.renderRect(Object.assign({}, part, {target, borderColor, backgroundColor}));
+			if (this.puzzle.puzzleId === 'NJbPwMVNwZ') {
+				svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/NJbPwMVNwZ.png', width: 1024 * 0.566, height: 1024 * 0.566, opacity: 0.4, x: '-2', y: '-2', preserveAspectRatio: 'none' } });
+			}
+			if (this.puzzle.puzzleId === 'MONOPOLYSUDOKU') {
+				svgRenderer.renderPart({ target: 'background', type: 'image', attr: { href: '/images/puzzles/monopolysudoku.png', width: 1024 * 0.66, height: 1024 * 0.66, opacity: 0.4, x: '-50', y: '-50', preserveAspectRatio: 'none' } });
+			}
 
-			/*
-			// Try to detect cell-sized squares only
-			// WHY THIS?!
-			if(attr.backgroundColor === '#CFCFCF' && attr.width === 1 && attr.height === 1) {
-				attr.backgroundColor = '#a0a0a0';
-				attr['fill-opacity'] = 0.5;
-			}
-			*/
-			let bgElem = svgRenderer.renderRect(attr);
-			if (part.text !== undefined) {
-				// Compansate for legacy font size hacks
-				if (part.fontSize !== undefined) part.fontSize += 4;
-				let textOpts = Object.assign({}, part, { target, backgroundColor: undefined });
-				if (part.textColor) Object.assign(textOpts, { color: part.textColor, textStroke: '#0000' });
-				svgRenderer.renderText(textOpts);
-				bgElem.classList.add('textbg');
-			}
-		};
-		const handleCellFeature = (cell, r, c) => {
-			if (cell.value !== undefined && !Number.isNaN(cell.value)) givens.push(`r${1 + r}c${1 + c}=${cell.value}`);
-			if ((cell.pencilMarks || []).length > 0) {
-				convertedPuzzle.pencilmarks = convertedPuzzle.pencilmarks || [];
-				convertedPuzzle.pencilmarks.push(`r${1 + r}c${1 + c}=${cell.pencilMarks.join(',')}`);
-			}
-			if ((cell.centremarks || []).length > 0) {
-				convertedPuzzle.centremarks = convertedPuzzle.centremarks || [];
-				convertedPuzzle.centremarks.push(`r${1 + r}c${1 + c}=${cell.centremarks.join(',')}`);
-			}
-		};
-		const handleRegionFeature = cells => {
-			let cage = {
-				cells: (cells || []).filter(item => Array.isArray(item)).map(([r, c]) => `r${1 + r}c${1 + c}`).join(','),
-				sum: triangularNumber(cells.length),
-				unique: true,
-				style: 'box',
-				type: 'region',
+			// Extract puzzle features
+			Object.keys(PuzzleFeatures).forEach(feature => convertedPuzzle[feature] = PuzzleFeatures[feature](puzzle) || []);
+
+			const handleArrowFeature = part => {
+				if (part.feature) {
+					switch (part.feature.type) {
+						case 'arrowsum':
+							applyLegacyOpacity((part.feature.part || {}).bulb);
+							svgRenderer.renderArrowSum(part.feature.part);
+							break;
+						case 'littlekiller': svgRenderer.renderLittleKiller(part.feature); break;
+						default: console.error('Unhandled feature in convertPuzzle > puzzle.arrows:', part.feature);
+					}
+					return;
+				}
+				//console.info('Unhandled feature in arrows:', part);
+				svgRenderer.renderArrow(Object.assign({ target: 'arrows' }, part));
 			};
-			if (cells.length === 81) cage.unique = false;
-			cages.push(cage);
-		};
-		const handleCageFeature = cage => {
-			if ((cage.cells || []).length === 0) return;
-			const labelCell = [...cage.cells].sort(sortTopLeftRC).pop();
-			const outCage = Object.assign({ style: 'killer' }, cage, {
-				cells: cage.cells.map(([r, c]) => `r${1 + r}c${1 + c}`).join(',')
-			});
-			if (cage.fontC) outCage.textColor = cage.fontC;
-			if (cage.outlineC) outCage.borderColor = cage.outlineC;
-			if (cage.value !== undefined && !/^\s*$/.test(cage.value)) {
-				outCage.cageValue = `r${1 + labelCell[0]}c${1 + labelCell[1]}: ${cage.value}`;
-				if (cage.feature) outCage.feature = cage.feature;
-			}
-			if (cage.unique !== undefined) outCage.unique = cage.unique;
-			if (cage.style && SvgRenderer.styles.cageBorders[cage.style]) outCage.style = cage.style;
-			cages.push(outCage);
-		};
-		// const handleFogFeature = ({ foglight, cages = [], overlays = [] }) => {
-		// 	if (foglight !== undefined && Array.isArray(foglight)) {
-		// 		convertedPuzzle.foglight = foglight;
-		// 	}
-		cages
-			.filter(cage => {
-				// Find messy imports of "FOGLIGHT" via overlay text
-				if (cage.value === undefined) {
-					const labelCell = [...cage.cells].sort(sortTopLeftRC).pop();
-					let fogLabelOverlay = overlays.find(({ center: [r, c], text }) =>
-						(r | 0) === labelCell[0] && (c | 0) === labelCell[1]
-						&& String(text).includes('FOGLIGHT')
-					);
-					if (fogLabelOverlay) {
-						cage.value = 'FOGLIGHT';
-						overlays.splice(overlays.indexOf(fogLabelOverlay), 1);
+			const handleLineFeature = part => {
+				// TODO: Revisit this hack when implementing the "lunchbox" feature (see: 3RJ9dFJpM9)
+				if (part.thickness === 1) part.thickness = 2;
+				if (part.feature) {
+					switch (part.feature.type) {
+						//case 'thermo': part.svgElem = svgRenderer.renderThermo(part.feature); break;
+						case 'inequality': svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part)); break;
+						case 'sandwichcage': svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part.feature.line)); break;
+						case 'palindrome': svgRenderer.renderPalindrome(part.feature); break;
+						case 'sudokux': case 'sudokux+': case 'sudokux-': svgRenderer.renderSudokuX(part.feature); break;
+						default: console.error('Unhandled feature in convertPuzzle > puzzle.lines:', part.feature);
+					}
+					return;
+				}
+				//console.info('Unhandled feature in lines:', part);
+				svgRenderer.renderLine(Object.assign({ target: 'arrows' }, part));
+			};
+			const handleOverlayFeature = part => {
+				if (part.feature) {
+					switch (part.feature.type) {
+						case 'kropki': return svgRenderer.renderKropki(part.feature.part); break;
+						case 'xv': return svgRenderer.renderXV(part.feature.part); break;
+						//case 'thermo': return;
+						case 'littlekiller': return;
+						case 'arrowsum':
+							// If skipping this causes issues, just remove the "return;" in the next line
+							return;
+							break;
+						case 'inequality': console.warn('implement text-to-line conversions for inequality feature.'); break;
+						case 'windoku': break;
+						default: console.error('Unhandled feature in convertPuzzle > puzzle.under/overlays:', part.feature);
 					}
 				}
-				return String(cage.value || '').match(/^FOGLIGHT$|^foglight:.*/i);
-			})
-			.forEach(cage => {
-				cages.splice(cages.indexOf(cage), 1);
-				const parsedCells = this.puzzle.parseCells(((cage.value || '').match(/^FOGLIGHT$|^foglight:\s*(.+)/i) || [])[1]).map(({ row, col }) => [row, col]);
-				convertedPuzzle.foglight = [
-					...(convertedPuzzle.foglight || []),
-					...(parsedCells || []),
-					...(cage.cells || []),
-				];
-			})
-		// };
+				//console.info('Unhandled feature in overlay/underlay:', part);
+				var target = (puzzle.underlays || []).indexOf(part) !== -1 ? 'underlay' : 'overlay';
+				var attr = Object.assign({ target }, part);
+				attr.borderColor = attr.borderColor || 'none';
+				attr.backgroundColor = attr.backgroundColor || 'none';
+				if (attr.backgroundColor === attr.borderColor) delete attr.borderColor;
+				applyLegacyOpacity(attr);
+				//if((backgroundColor || '').toLowerCase() === '#cfcfcf' && (opacity === 1)) backgroundColor = 'rgba(0,0,0,0.2)';
+				//if(borderColor !== 'none') borderColor = App.colorHexToRGBA(borderColor, 0.5);
+				//if(backgroundColor !== 'none') backgroundColor = App.colorHexToRGBA(backgroundColor, 0.5);
+				//console.log('rect colours:', part, backgroundColor, borderColor, opacity);
+				//svgRenderer.renderRect(Object.assign({}, part, {target, borderColor, backgroundColor}));
 
-		// TODO: Move these functions to the main App class
-		// this.handleArrowFeature = handleArrowFeature;
-		// this.handleLineFeature = handleLineFeature;
-		// this.handleOverlayFeature = handleOverlayFeature;
-		// this.handleCellFeature = handleCellFeature;
-		// this.handleRegionFeature = handleRegionFeature;
-		// this.handleFogFeature = handleFogFeature;
+				/*
+				// Try to detect cell-sized squares only
+				// WHY THIS?!
+				if(attr.backgroundColor === '#CFCFCF' && attr.width === 1 && attr.height === 1) {
+					attr.backgroundColor = '#a0a0a0';
+					attr['fill-opacity'] = 0.5;
+				}
+				*/
+				let bgElem = svgRenderer.renderRect(attr);
+				if (part.text !== undefined) {
+					// Compansate for legacy font size hacks
+					if (part.fontSize !== undefined) part.fontSize += 4;
+					let textOpts = Object.assign({}, part, { target, backgroundColor: undefined });
+					if (part.textColor) Object.assign(textOpts, { color: part.textColor, textStroke: '#0000' });
+					svgRenderer.renderText(textOpts);
+					bgElem.classList.add('textbg');
+				}
+			};
+			const handleCellFeature = (cell, r, c) => {
+				if (cell.value !== undefined && !Number.isNaN(cell.value)) givens.push(`r${1 + r}c${1 + c}=${cell.value}`);
+				if ((cell.pencilMarks || []).length > 0) {
+					convertedPuzzle.pencilmarks = convertedPuzzle.pencilmarks || [];
+					convertedPuzzle.pencilmarks.push(`r${1 + r}c${1 + c}=${cell.pencilMarks.join(',')}`);
+				}
+				if ((cell.centremarks || []).length > 0) {
+					convertedPuzzle.centremarks = convertedPuzzle.centremarks || [];
+					convertedPuzzle.centremarks.push(`r${1 + r}c${1 + c}=${cell.centremarks.join(',')}`);
+				}
+			};
+			const handleRegionFeature = cells => {
+				let cage = {
+					cells: (cells || []).filter(item => Array.isArray(item)).map(([r, c]) => `r${1 + r}c${1 + c}`).join(','),
+					sum: triangularNumber(cells.length),
+					unique: true,
+					style: 'box',
+					type: 'region',
+				};
+				if (cells.length === this.puzzle.cells.length) cage.unique = false;
+				cages.push(cage);
+			};
+			const handleCageFeature = cage => {
+				if ((cage.cells || []).length === 0) return;
+				const labelCell = [...cage.cells].sort(sortTopLeftRC).pop();
+				const outCage = Object.assign({ style: 'killer' }, cage, {
+					cells: cage.cells.map(([r, c]) => `r${1 + r}c${1 + c}`).join(',')
+				});
+				if (cage.fontC) outCage.textColor = cage.fontC;
+				if (cage.outlineC) outCage.borderColor = cage.outlineC;
+				if (cage.value !== undefined && !/^\s*$/.test(cage.value)) {
+					outCage.cageValue = `r${1 + labelCell[0]}c${1 + labelCell[1]}: ${cage.value}`;
+					if (cage.feature) outCage.feature = cage.feature;
+				}
+				if (cage.unique !== undefined) outCage.unique = cage.unique;
+				if (cage.style && SvgRenderer.styles.cageBorders[cage.style]) outCage.style = cage.style;
+				cages.push(outCage);
+			};
+			const handleFogFeature = ({ foglight, cages = [], overlays = [] }) => {
+				if (foglight !== undefined && Array.isArray(foglight)) {
+					convertedPuzzle.foglight = foglight;
+				}
+				cages
+					.filter(cage => {
+						// Find messy imports of "FOGLIGHT" via overlay text
+						if (cage.value === undefined) {
+							const labelCell = [...cage.cells].sort(sortTopLeftRC).pop();
+							let fogLabelOverlay = overlays.find(({ center: [r, c], text }) =>
+								(r | 0) === labelCell[0] && (c | 0) === labelCell[1]
+								&& String(text).includes('FOGLIGHT')
+							);
+							if (fogLabelOverlay) {
+								cage.value = 'FOGLIGHT';
+								overlays.splice(overlays.indexOf(fogLabelOverlay), 1);
+							}
+						}
+						return String(cage.value || '').match(/^FOGLIGHT$|^foglight:.*/i);
+					})
+					.forEach(cage => {
+						cages.splice(cages.indexOf(cage), 1);
+						const parsedCells = this.puzzle.parseCells(((cage.value || '').match(/^FOGLIGHT$|^foglight:\s*(.+)/i) || [])[1]).map(({ row, col }) => [row, col]);
+						convertedPuzzle.foglight = [
+							...(convertedPuzzle.foglight || []),
+							...(parsedCells || []),
+							...(cage.cells || []),
+						];
+					})
+			};
 
-		// handleFogFeature(puzzle);
-		if (!Framework.getSetting('arrowsabovelines')) {
-			(puzzle.arrows || []).forEach(handleArrowFeature);
-			(puzzle.lines || []).forEach(handleLineFeature);
-		}
-		else {
-			(puzzle.lines || []).forEach(handleLineFeature);
-			(puzzle.arrows || []).forEach(handleArrowFeature);
-		}
-		[].concat(puzzle.underlays || [], puzzle.overlays || []).forEach(handleOverlayFeature);
-		(puzzle.cells || []).forEach((row = [], r) => row.forEach((cell = {}, c) => handleCellFeature(cell, r, c)));
-		(puzzle.cages || []).forEach(handleCageFeature);
-		(puzzle.regions || []).forEach(handleRegionFeature);
+			// TODO: Move these functions to the main App class
+			this.handleArrowFeature = handleArrowFeature;
+			this.handleLineFeature = handleLineFeature;
+			this.handleOverlayFeature = handleOverlayFeature;
+			this.handleCellFeature = handleCellFeature;
+			this.handleRegionFeature = handleRegionFeature;
+			this.handleFogFeature = handleFogFeature;
 
-		let infoElem = document.querySelector('.controls-info');
-		if (infoElem !== null) {
-			infoElem.style.display = 'none';
-			Object.assign(document.querySelector('.puzzle-header').style, {
-				height: '4em',
-				opacity: '1'
-			});
-		}
-		// if (isExperimentalMode() && this.puzzle.puzzleId === 'TmMBJj8jbr') {
-		// 	[...document.querySelectorAll('.thermo-line, .thermo-bulb, svg rect[fill="#a0a0a0"]')].forEach(part => part.setAttribute('opacity', 0));
-		// }
-		// Special Solutionfor "3DBNbtLfdp"
-		// let badSol = '000000000000000000000012356403142560416235045632102563140325461054123606251430561324036241501436250234156063514204615320642513021465305324610153642000000000000000000000041365204632150532641062514301254630614235054132605421360425163023651403165420361452016423502316540256314035246106543210143526000000000000000000000';
-		// let goodSol = '.......................123564.314256.416235..456321.256314.325461..541236.625143.561324..362415.143625.234156..635142.461532.642513..214653.532461.153642........................413652.463215.532641..625143.125463.614235..541326.542163.425163..236514.316542.361452..164235.231654.256314..352461.654321.143526.......................';
-		// if (puzzle.id === '3DBNbtLfdp' && convertedPuzzle.solution === badSol) {
-		// 	convertedPuzzle.solution = goodSol;
-		// }
-
-		// Parse rules from metadata for additional annotations
-		const rules = normalizeRules(convertedPuzzle.rules);
-		const withKiller = hasKillerCage(rules) !== undefined;
-		[...cages].forEach(cage => {
-			if (withKiller && cage.unique === undefined && cage.style === 'killer') {
-				cage.unique = true;
-				let numVal = Number(cage.value);
-				if (Number.isInteger(numVal) && numVal > 0) cage.sum = numVal;
+			handleFogFeature(puzzle);
+			if (!Framework.getSetting('arrowsabovelines')) {
+				(puzzle.arrows || []).forEach(handleArrowFeature);
+				(puzzle.lines || []).forEach(handleLineFeature);
 			}
-		});
+			else {
+				(puzzle.lines || []).forEach(handleLineFeature);
+				(puzzle.arrows || []).forEach(handleArrowFeature);
+			}
+			[].concat(puzzle.underlays || [], puzzle.overlays || []).forEach(handleOverlayFeature);
+			(puzzle.cells || []).forEach((row = [], r) => row.forEach((cell = {}, c) => handleCellFeature(cell, r, c)));
+			(puzzle.cages || []).forEach(handleCageFeature);
+			(puzzle.regions || []).forEach(handleRegionFeature);
 
-		// Check for XV rules to detect indefinite rules
-		const withXV = hasXV(convertedPuzzle.rules);
-		if (!withXV) delete convertedPuzzle.xvs;
+			let infoElem = document.querySelector('.controls-info');
+			if (infoElem !== null) {
+				infoElem.style.display = 'none';
+				Object.assign(document.querySelector('.puzzle-header').style, {
+					height: '4em',
+					opacity: '1'
+				});
+			}
+			if (isExperimentalMode() && this.puzzle.puzzleId === 'TmMBJj8jbr') {
+				[...document.querySelectorAll('.thermo-line, .thermo-bulb, svg rect[fill="#a0a0a0"]')].forEach(part => part.setAttribute('opacity', 0));
+			}
+			// Special Solutionfor "3DBNbtLfdp"
+			let badSol = '000000000000000000000012356403142560416235045632102563140325461054123606251430561324036241501436250234156063514204615320642513021465305324610153642000000000000000000000041365204632150532641062514301254630614235054132605421360425163023651403165420361452016423502316540256314035246106543210143526000000000000000000000';
+			let goodSol = '.......................123564.314256.416235..456321.256314.325461..541236.625143.561324..362415.143625.234156..635142.461532.642513..214653.532461.153642........................413652.463215.532641..625143.125463.614235..541326.542163.425163..236514.316542.361452..164235.231654.256314..352461.654321.143526.......................';
+			if (puzzle.id === '3DBNbtLfdp' && convertedPuzzle.solution === badSol) {
+				convertedPuzzle.solution = goodSol;
+			}
 
-		// this.showMetaInfoUI(convertedPuzzle);
-		// }
-		// catch (err) { reportAndRethrow('Error in Puzzle.convertPuzzle:')(err); }
+			// Parse rules from metadata for additional annotations
+			const rules = normalizeRules(convertedPuzzle.rules);
+			const withKiller = hasKillerCage(rules) !== undefined;
+			[...cages].forEach(cage => {
+				if (withKiller && cage.unique === undefined && cage.style === 'killer') {
+					cage.unique = true;
+					let numVal = Number(cage.value);
+					if (Number.isInteger(numVal) && numVal > 0) cage.sum = numVal;
+				}
+			});
+
+			// Check for XV rules to detect indefinite rules
+			const withXV = hasXV(convertedPuzzle.rules);
+			if (!withXV) delete convertedPuzzle.xvs;
+
+			this.showMetaInfoUI(convertedPuzzle);
+		}
+		catch (err) { reportAndRethrow('Error in Puzzle.convertPuzzle:')(err); }
 
 		// Show thermos
-		// (convertedPuzzle.thermos || []).forEach(seg => svgRenderer.renderArrow({ color: 'blue', thickness: 3, headLength: 0.5, wayPoints: seg.points.map(([r, c]) => [r + 0.5, c + 0.5]) }));
+		// (convertedPuzzle.thermos || []).forEach(seg => svgRenderer.renderArrow({color: 'blue', thickness: 3, headLength: 0.5, wayPoints: seg.points.map(([r, c]) => [r + 0.5, c + 0.5])}));
 		/*
 		Object.keys(convertedPuzzle).forEach(key => {
 			if((convertedPuzzle[key] || []).length > 0) {
@@ -3985,7 +3989,7 @@ const App = (() => {
 			}
 		});
 		*/
-		// this.initSudorkle(convertedPuzzle);
+		this.initSudorkle(convertedPuzzle);
 		return convertedPuzzle;
 	};
 	P.handleRestartPuzzle = function () {
@@ -4058,7 +4062,7 @@ const App = (() => {
 				{ tag: 'title', innerHTML: '<span class="emoji icon-sven">🎉</span> Yey, Congrats! <span class="emoji icon-toby">🎉</span>', style: 'text-align: center' },
 				{ tag: 'text', innerHTML: getMsg(type, 'Looks good as far as I can tell!'), style: 'text-align: center' },
 				{ tag: 'text', innerHTML: '<span class="emoji">⚠️</span>(Puzzle doesn\'t include solution)<span class="emoji">⚠️</span>', style: 'text-align: center; font-size: 100%;' },
-				{ tag: 'text', innerHTML: `<a href="#" onclick="handleNewLinkWithSolution()">New link with solution</a>`, style: 'text-align: center; font-size: 100%;' },
+				{ tag: 'text', innerHTML: `<a href="#" onclick="handleNewLinkWithSolution()">Create new link with your solution</a>`, style: 'text-align: center; font-size: 100%;' },
 			];
 			case 'invalid': return [
 				{ tag: 'title', innerHTML: '<span class="emoji">😧</span> Bobbins! <span class="emoji">😧</span>', style: 'text-align: center' },
@@ -4878,6 +4882,8 @@ const App = (() => {
 		//console.log(shiftDown ? 'shift' : '', controlDown ? 'control' : '', metaDown ? 'meta' : '', altDown ? 'alt' : '', ctrlMetaDown ? 'ctrlMeta' : '');
 		this.shiftPressed = false || shiftDown || false;
 		this.controlPressed = false || ctrlMetaDown || metaDown || controlDown || false;
+		// TODO: Remove MacOS meta key aliasing (But keep ctrl+a behavior)
+		//this.controlPressed = false || controlDown || false;
 		this.altPressed = false || altDown || false;
 		//console.log('shiftPressed: %s, controlPressed: %s, keys:', this.shiftPressed, this.controlPressed, Object.keys(this.keys).filter(key => this.keys[key]).sort().join(', '));
 		// Workaround for rare X11 shift/ctrl/alt keyup handling
@@ -5518,69 +5524,12 @@ async function handleDOMContentLoaded() {
 	}
 }
 
-renderGridLines = function (svgRenderer, rows, cols) {
-	[...svgRenderer.getElem().querySelectorAll('.cell-grids .cell-grid')].forEach(elem => elem.remove());
-	let lines = [];
-	for (var r = 0; r <= rows; r++) lines.push([[r, 0], [r, cols]]);
-	for (var c = 0; c <= cols; c++) lines.push([[0, c], [rows, c]]);
-	svgRenderer.renderPart({
-		target: 'cell-grids',
-		type: 'path',
-		attr: {
-			class: 'cell-grid',
-			d: lines.map(SvgRenderer.rcToPathData).join(' '),
-		}
-	});
-};
 
-rednerCages = function (svgRenderer, cages) {
-	(cages || []).forEach(cage => {
-		if ((cage.cells || []).length === 0) return;
-		if (cage.hidden === true) return;
-		// if (cage.unique && solution) {
-		//     const cellSol = cage.parsedCells
-		//         .map(cell => solution[this.cells.indexOf(cell)])
-		//         .filter(v => !Puzzle.SolutionBlanks.includes(v));
-		//     if (hasDupes(cellSol)) cage.unique = false;
-		// }
-		const cageTarget = cage.style === 'box' ? 'cell-grids' : 'cages';
-		const cageOpts = Object.assign({}, cage, {
-			target: cageTarget,
-			cells: Puzzle.resolveRC(cage.cells).map(([r, c]) => ({ row: r - 1, col: c - 1 })),
-			cageValue: cage.cageValue,
-			//cageValue: String(cage.cageValue === undefined ? cage.sum : cage.cageValue),
-			style: cage.style
-		});
-		svgRenderer.renderCage(cageOpts);
-	});
-}
-async function load() {
-	const { parsePuzzleData, fetchPuzzle } = PuzzleLoader;
-	const svgRenderer = new SvgRenderer()
-
-	// const puzzelData = fetchPuzzle(puzzleId)
-	// puzzleData = 'sclN4SwJgXA5AjgTgNjAEQIoCkBKAHAZlAGgGMBnCAVgAZiBTCAbXoOZeYF0CnWWOvuDe/dpyECRQwRPH9JMjnDqN61Sr2oBGNQQBMvdQVWd9mozt7aD5gifoXdvegGZLnZzee7OAFhf0fNn096cl8QmxD7TnoEXxibGKCAdl9km2SggA5fLJssyMZqRy0vLXI9AiLTEtMyzgtK2wJqxrKHZwbnZudavwreH2afHpCGkOaQ1qiYhpjmmJ7khuTm5J6shqzmrMmCggQtRK0M8v3TQ9Njur2rc8bjtuvXAlvnS97T3tufN5CPkNuQvcpo9os9eDE3skPslbsk3lkPllbll7hwAK4MYBEAAuDEoADowoSOAB3CD6AAW5OI6ggAFEAEKJciOCxEbT0pksixwCC4AC+BCxuPo6kJ1mJBDJlOpRFpjOZrOIHIV3IIvIFQpxDDFEUl0oIVP0cs5irZKq5So1guFDG04vI+upRppEAAgo46ZQvFl2e7Pd6statSL7f8nTLjbSPV6fcr/bGg3z+RwAPaY7X0AC0BJCudJEAJ2hCVKLIRNAGIAGLx6vqvkEXBkbRZbF0dQAThtmZz4t1BbLhsL+OLrrrfrrGsbzdbdG0lG7It7etqZMHpZH5dp445k4bTYgLYIbcPXkXDGXBAyTvXw9HlZrE5rU4PR5P2jPIYvuYqN83Q8HB9a2ffcZ2POdz2zH8vD/UcN3vbdH13EDcGnQ9Z0PBBIMvR1VzvEt8LHJCID3VDXww9REmwn8EFggjAMQ4D6zIsCT0/W0oPFRI6IA/8gKfZi0LfOh2MzH9lwHf94K3EjiNIoSKMcSCwwICSpUI6SiKYl9WPbJSv1FcU1LXKTCP45DBPI8CIEcLCDMcIz83U28GNk7TQPQ6z9I4mCQmMjSzMYgSdM8k9vMzXDVKcky4MCtzgo84SbMg2i/OigLXJ3NyQqSjJIO4tKeM08zssSjCuwM69Crwly+KCiycvKlMCAAN0gehQEgWBMAAWRgABNAB1GAAFUADsAAUiEIbA0QAIwAGxAEgKRoMA3VxKB53nHNEizdRKAAFU7GzKELLwAC1CE2gB5MaaAAAkGgBDABPB7DtTB6AHEaGxB67oegBhOBnqIABrEAxoAcw+1bgbgV7sGxEAiAAQigFN+SAA'
-	puzzleData = 'fpuzN4IgzglgXgpiBcBOANCALhNAbO8QGUAHAJwgDsMyBzAAnJrQAsYaARAQ2IGsRV2BXJgHtiCAo3K0A4uwC2k3iGL8cYGGjEA5EbPZYaYfgBMhXfjWWqa7QoSwBPAHQAdMq4DyZGlWIwYXgHcJMEIYYhoschgwZGsjACt2AGN/NBojCCpMMBpZfjA0jIAzIrCaACN7azScdgKaAFZHGk8aQn5iOxZfMnL2L0iyaNiMrLQcop1rGiShMjUkwQgANxY1AEd+fxTY+n6qkSMw5oAxEQt/PvnrMiMaIIgQsJjrLH1B6OtfGgBmGZg3jksHMqC43GRWJlsnQvOx7hI0CwkhBiEkcLl8mkbKFODCGMwDB1iEJ+LdJP9Ac1NPxZOVnnimEiUWiWJwWJECjA7kVibIDLo3tE0mghBVMlQhc1WnDGcRZEJZOowiMoeMYUlfHUWDyFRUVOUGKKMIQwa5IWMcnMbl9iQFCXyRfiWKNMAyCcjUThmuboXsaFwIILwkl2BL7YanYa0Ho3UiRENiM0AMIArA5WZkIZJRF3SrTB6I9JCLHfDMLJarADcFLTMzmWZzFSqcPKWGSXCLJZY9EZFnYGFFAEZ4AAmZOp9P1mDZrlN6YANRo5wAGuHHQ0l+FBwAGWK+J7ZlYApyKHwQIwIADal+AAF9kHeH/fHy/n2+nwBdZA39+vp//v87y/H8AN/MDQOAwDwKgz9vxg+CwMg6DkIguCUIQ2CQIwhCkNAvCcK/dBmDlBUlVEeAbxAD4wCvS8QAAJRHJMABZFEYpMfhAD8P1vQieiuK9QGo2iGOYpMAHY2LEgAOKSk0QLieIfKiohoii6PYyTUHY2TtJ+JNZO43jUAeJ5iDUyjhPUhiGiTEc2IANjsxyOMU58VKGCyNKYzi9Nc7SxM4ozlKs68GP0hy2KYyLgqE1SRPYhooqTGKeMIgMgxDCVBJAFJASvcKk0HOTioC5zCOWPQtjESL3LytMCvo6SDLY5qFO0xAWo6+SuNQSqsGqvAR1qwjilKHoUhy+qLIYzrfNm8q6onRrbMi7SnJipb8oohi2rY8SerS1BiH7CAhCm5advY+ztMHRblOmxqDrWhiNq44yQE4W0ctCjTbNYsqAdEpMku41BHqu/73pC+LrPog6kvWkGXNS8HLo0hH3sIgAPZYLu27znO0pjioqqrcBAecQC2hqroO0rdqK3qQH6waQGXanCM2dgjGULp8dpjS7oZ+i7puhiSeS+yyYG6Ir0HZBmOQaTkEQJTQAhv6JLY2zdNe7WkcMvryYsn5FeV1WjpASYqEiKhGA0K6mPF+iZOZj4fthsLXYN4G9Z9hSwZAElsCiJMxAAYhObcHPE6PFACc8mAQbdHCV63eSTOYChO8hHYYy5+mpmHPISpitIlrrCsMwiQ4+cO8CjmO4+3BOk8YFO09QHVZCz+Y0FzigxHowuyGLuLS7h2yXacmfXKDuuw8j2Po9jtujGT+BU7NjOFT7nP2DzsQAHVglCczx48uW4Z8tj9Pmn2gtrwR6+Xlu15M9vO53nv94Hw+h54FPo8c+NF3K/UKi9diqNg4vyXo3Fezd16b23t3TO2d/5HyAWfZ4l8IGJWSjAxeQwG4gAjogj+IBE4bw7lvRwP90H90HvnYBZkwGETAEIAaA4x47XaiAPWiMQBAxehXcWDN5oMyBmIxQ/D5ovUEYoeRihxZCIZnrfhFcgbiMUHreaQNNGKCES9IRyjUAVz1lI2RKjFAV34SIoxNjUB6MUAzEx1jUAMy0UopxAjFDSJ8c43xajFAvX4XrHRqA5GhMcagAJPEgA==';
-	// puzzleData = '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'
-	const puzzleObj = await parsePuzzleData(puzzleData)
-	console.log(puzzleObj)
-	const convertedPuzzle = App.prototype.convertPuzzle(puzzleObj)
-	console.log(convertedPuzzle)
-
-	const rows = (puzzleObj.cells || []).length;
-	const cols = Math.max.apply(Math, (puzzleObj.cells || []).map(row => row.length));
-	renderGridLines(svgRenderer, rows, cols)
-	rednerCages(svgRenderer, convertedPuzzle.cages)
-
-	svgRenderer.adjustViewBox(-64, -64, 656, 656)
-}
-
-
-// //window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
-// (() => {
-// 	let intervalId = setInterval(() => {
-// 		if(document.readyState !== 'complete') return;
-// 		clearInterval(intervalId);
-// 		handleDOMContentLoaded();
-// 	}, 10);
-// })();
+//window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
+(() => {
+	let intervalId = setInterval(() => {
+		if (document.readyState !== 'complete') return;
+		clearInterval(intervalId);
+		handleDOMContentLoaded();
+	}, 10);
+})();
