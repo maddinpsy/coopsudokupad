@@ -398,7 +398,6 @@
 	<script defer src="/feature-shorturl.js?v=0.555.0"></script>
 	<script defer src="/feature-customcolors.js?v=0.555.0"></script>
 	<script defer src="/feature-endless.js?v=0.555.0"></script>
-	<script defer src="/feature-emoji.js?v=0.555.0"></script>
 	<script defer src="/feature-rulealert.js?v=0.555.0"></script>
 	<script defer src="/feature-streamtool.js?v=0.555.0"></script>
 	<script defer src="/feature-screenshot.js?v=0.555.0"></script>
