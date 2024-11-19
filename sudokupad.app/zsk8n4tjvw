@@ -423,6 +423,8 @@
 	<link rel="stylesheet" href="/tool-calculator.css?v=0.555.0">
 	<!--/BUNDLE[/sudokupad-tools.bundle.css]-->
 
+	<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 	<script defer>
 		function preventZoom(event) {
 			console.log('preventZoom:', event);

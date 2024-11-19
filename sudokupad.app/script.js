@@ -3451,7 +3451,38 @@ const App = (() => {
 		const RepeatUndoInterval = Framework.getSetting('repeatundointerval');
 		P.undo = autoRepeatFunc(P.undoOnce, RepeatUndoDelay, RepeatUndoInterval);
 		P.redo = autoRepeatFunc(P.redoOnce, RepeatUndoDelay, RepeatUndoInterval);
+		this.initCoop();
 	};
+	P.initCoop = function () {
+		var peer = new Peer(options = {});
+		const peerID = document.location.search.split(/peer=|&/)[1];
+		const app_instance = this;
+		peer.on('open', function (id) {
+			if (peerID) {
+				var conn = peer.connect(peerID);
+				app_instance.peerConn = conn;
+				conn.on('data', function (strAction) {
+					const objAction = app_instance.puzzle.parseAction(strAction)
+					app_instance.puzzle.act({ ...objAction, remote: true });
+				});
+			} else {
+				console.log(document.location + "?peer=" + id);
+			}
+		});
+		peer.on('connection', function (conn) {
+			app_instance.peerConn = conn;
+			conn.on('data', function (strAction) {
+				const objAction = app_instance.puzzle.parseAction(strAction)
+				app_instance.puzzle.act({ ...objAction, remote: true });
+			});
+		});
+		this.puzzle.on("act", (strAction, objAction) => {
+			if (this.peerConn && this.peerConn.open && !objAction.remote) {
+				this.peerConn.send(strAction);
+			}
+		});
+	}
+
 	P.handleTimerUnpause = function (arg) {
 		const { puzzle: { replayStack: rs } } = this;
 		// If last action is already unpause, skip!
