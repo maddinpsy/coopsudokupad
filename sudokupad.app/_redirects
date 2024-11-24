@@ -1,1 +1,1 @@
-/api/puzzle/:puzzle_id https://sudokupad.app/api/puzzle/:puzzle_id 302
+/api/puzzle/:puzzle_id https://sudokupad.app/api/puzzle/:puzzle_id 200
