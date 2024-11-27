@@ -1,0 +1,16 @@
+:80 {
+    root * /app
+
+    route /* {
+        reverse_proxy /api/puzzle/* http://sudokupad.app
+        try_files {path} /index.html
+    }
+    file_server
+
+    encode gzip
+
+    log {
+        output stdout
+        format console
+    }
+}
