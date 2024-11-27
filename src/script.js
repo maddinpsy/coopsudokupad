@@ -3453,6 +3453,18 @@ const App = (() => {
 		P.redo = autoRepeatFunc(P.redoOnce, RepeatUndoDelay, RepeatUndoInterval);
 		this.initCoop();
 	};
+	P.showCoopURL = function () {
+		Framework.off('closedialog', P.showCoopURL);
+		window.setTimeout(() =>
+			Framework.showDialog({
+				parts: [
+					{ tag: 'text', content: 'Copy the URL and send it to a friend:' },
+					{ tag: 'input', type: 'text', value: Framework.app.coopURL, style: 'margin: 1em auto;display: block;width: 80%;' },
+					{ tag: 'options', options: [{ tag: 'button', content: "Close", action: 'close' }] }
+				]
+			})
+			, 100)
+	}
 	P.initCoop = function () {
 		var peer = new Peer(options = {});
 		const peerID = document.location.search.split(/peer=|&/)[1];
