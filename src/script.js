@@ -3478,7 +3478,9 @@ const App = (() => {
 					app_instance.puzzle.act({ ...objAction, remote: true });
 				});
 			} else {
-				console.log(document.location + "?peer=" + id);
+				app_instance.coopURL = document.location + "?peer=" + id
+				console.log(app_instance.coopURL);
+				Framework.on('closedialog', app_instance.showCoopURL)
 			}
 		});
 		peer.on('connection', function (conn) {

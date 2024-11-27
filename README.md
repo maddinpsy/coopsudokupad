@@ -1,18 +1,17 @@
 # Coopsudoku
 
-To start your Phoenix server:
+This is a copy of Svens sudokupad.app with support for multiplayer.
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+Start a new puzzle and send the url to a friend. Then every action is shared between the browsers.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Start the dev server with:
+```
+npx local-web-server --rewrite '/api/puzzle/(.*) -> http://sudokupad.app/api/puzzle/$1' --spa index.html -d src
+```
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+## current limitations
+- only two player can connect to each other
+- the url is only shown at start
+- there is no status, no info whether it is connected
+- no error handling, only shown on the console
+- The state is not synced, if someone is connecting later, only new changes will be sent to her.
